@@ -1,0 +1,55 @@
+name: Deploy to HF Spaces
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install huggingface_hub
+        run: pip install huggingface_hub
+      
+      - name: Create README.md for HF Space
+        run: |
+          cat > README.md << 'EOF'
+          ---
+          title: NEXUS AI Bid
+          emoji: "\U0001F3D7"
+          colorFrom: blue
+          colorTo: indigo
+          sdk: docker
+          app_port: 7860
+          pinned: false
+          ---
+          
+          NEXUS Bid Platform
+          EOF
+      
+      - name: Push to HF Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python3 -c "
+          import os
+          from huggingface_hub import HfApi
+          api = HfApi(token=os.environ['HF_TOKEN'])
+          user = api.whoami()
+          repo_id = user['name'] + '/nexus-bid'
+          try:
+              api.create_repo(repo_id=repo_id, repo_type='space', space_sdk='docker', token=os.environ['HF_TOKEN'], private=False)
+              print('Space created')
+          except:
+              print('Space exists')
+          api.upload_folder(folder_path='.', repo_id=repo_id, repo_type='space', token=os.environ['HF_TOKEN'], ignore_patterns=['.git/*','venv/*','__pycache__/*','upload/*','output/*','*.log','.env','deploy.sh'])
+          print('Deployed!')
+          print('URL: https://' + user['name'] + '-nexus-bid.hf.space')
+          "
