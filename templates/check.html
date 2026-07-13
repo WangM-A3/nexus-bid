@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS · 招标文件合规检测</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a1a;
+            --bg-secondary: #12122a;
+            --bg-card: #1a1a3e;
+            --bg-card-hover: #222260;
+            --accent: #00ffff;
+            --accent-dim: #00aaaa;
+            --accent-glow: rgba(0, 255, 255, 0.15);
+            --text-primary: #e0e0ff;
+            --text-secondary: #8888aa;
+            --text-muted: #555577;
+            --border: #2a2a55;
+            --danger: #ff4466;
+            --danger-bg: rgba(255, 68, 102, 0.1);
+            --warning: #ffaa00;
+            --warning-bg: rgba(255, 170, 0, 0.1);
+            --success: #00ff88;
+            --success-bg: rgba(0, 255, 136, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* —— 顶部导航 —— */
+        .navbar-nexus {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .navbar-nexus .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .navbar-nexus .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 18px;
+            color: var(--bg-primary);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+        .navbar-nexus .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .navbar-nexus .logo-text .accent {
+            color: var(--accent);
+        }
+        .navbar-nexus .logo-text .sub {
+            color: var(--text-secondary);
+            font-weight: 400;
+            font-size: 14px;
+        }
+        .navbar-nexus .status-badge {
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        .navbar-nexus .status-badge .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-badge.enabled .dot { background: var(--success); }
+        .status-badge.disabled .dot { background: var(--text-muted); }
+
+        .nav-link {
+            color: var(--text-secondary); text-decoration: none; font-size: 14px;
+            padding: 6px 16px; border-radius: 8px; transition: all 0.3s;
+        }
+        .nav-link:hover { color: var(--accent); background: var(--bg-card); }
+        .nav-link.active { color: var(--accent); background: var(--bg-card); }
+
+        /* —— 主容器 —— */
+        .main-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+        }
+
+        /* —— Hero区域 —— */
+        .hero {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .hero h1 {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--accent), #66ddff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.8;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .hero .policy-badge {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 6px 16px;
+            background: var(--accent-glow);
+            border: 1px solid var(--accent-dim);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--accent);
+        }
+
+        /* —— 上传区域 —— */
+        .upload-zone {
+            background: var(--bg-card);
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 48px 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--accent);
+            background: var(--bg-card-hover);
+            box-shadow: 0 0 40px var(--accent-glow);
+        }
+        .upload-zone .upload-icon {
+            font-size: 48px;
+            color: var(--accent);
+            margin-bottom: 16px;
+            opacity: 0.8;
+        }
+        .upload-zone .upload-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .upload-zone .upload-hint {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+        .upload-zone .upload-formats {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .upload-zone .format-tag {
+            padding: 3px 10px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--accent-dim);
+        }
+
+        /* —— 检测维度卡片 —— */
+        .dimensions {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin: 32px 0;
+        }
+        .dimension-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .dimension-card:hover {
+            border-color: var(--accent-dim);
+            transform: translateY(-2px);
+        }
+        .dimension-card .dim-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .dimension-card .dim-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .dimension-card .dim-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        /* —— 加载动画 —— */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 26, 0.9);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .loading-overlay.active {
+            display: flex;
+        }
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 24px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-text {
+            color: var(--accent);
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .loading-subtext {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        /* —— 结果区域 —— */
+        .results-section {
+            display: none;
+            margin-top: 32px;
+        }
+        .results-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* —— 概览面板 —— */
+        .summary-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .summary-header h3 {
+            font-size: 18px;
+            margin: 0;
+            color: var(--text-primary);
+        }
+        .summary-header .actions {
+            display: flex;
+            gap: 12px;
+        }
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        .stat-card .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .stat-card .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+        .stat-card.total .stat-value { color: var(--accent); }
+        .stat-card.high .stat-value { color: var(--danger); }
+        .stat-card.medium .stat-value { color: var(--warning); }
+        .stat-card.low .stat-value { color: var(--success); }
+
+        /* —— 按钮 —— */
+        .btn-nexus {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-nexus:hover {
+            background: var(--accent-dim);
+            box-shadow: 0 0 20px var(--accent-glow);
+            color: var(--bg-primary);
+        }
+        .btn-nexus-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-nexus-outline:hover {
+            border-color: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        /* —— 检测结果项 —— */
+        .result-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border-left: 4px solid var(--text-muted);
+            transition: all 0.3s ease;
+        }
+        .result-item:hover {
+            background: var(--bg-card-hover);
+        }
+        .result-item.level-high { border-left-color: var(--danger); }
+        .result-item.level-medium { border-left-color: var(--warning); }
+        .result-item.level-low { border-left-color: var(--success); }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .level-badge {
+            padding: 3px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .level-badge.high { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+        .level-badge.medium { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+        .level-badge.low { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+
+        .category-tag {
+            padding: 3px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .result-body {
+            display: grid;
+            gap: 10px;
+        }
+        .result-field {
+            display: flex;
+            gap: 8px;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        .result-field .field-label {
+            color: var(--text-muted);
+            white-space: nowrap;
+            min-width: 70px;
+        }
+        .result-field .field-value {
+            color: var(--text-primary);
+            flex: 1;
+        }
+        .result-field.quote {
+            background: var(--bg-secondary);
+            border-left: 3px solid var(--accent-dim);
+            padding: 8px 12px;
+            border-radius: 0 6px 6px 0;
+            margin: 2px 0;
+        }
+        .result-field.quote .field-value {
+            color: var(--text-secondary);
+            font-style: italic;
+            font-size: 13px;
+        }
+
+        /* —— 空结果 —— */
+        .no-results {
+            text-align: center;
+            padding: 48px;
+            color: var(--success);
+        }
+        .no-results .icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+        }
+
+        /* —— 错误提示 —— */
+        .error-alert {
+            display: none;
+            background: var(--danger-bg);
+            border: 1px solid var(--danger);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            color: var(--danger);
+            font-size: 14px;
+        }
+        .error-alert.active {
+            display: block;
+        }
+
+        /* —— 页脚 —— */
+        .footer {
+            text-align: center;
+            padding: 32px 0;
+            color: var(--text-muted);
+            font-size: 12px;
+            border-top: 1px solid var(--border);
+            margin-top: 60px;
+        }
+        .footer a {
+            color: var(--accent-dim);
+            text-decoration: none;
+        }
+
+        /* —— 响应式 —— */
+        @media (max-width: 768px) {
+            .dimensions { grid-template-columns: repeat(2, 1fr); }
+            .summary-stats { grid-template-columns: repeat(2, 1fr); }
+            .hero h1 { font-size: 26px; }
+            .main-container { padding: 24px 16px 60px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<nav class="navbar-nexus">
+    <div class="logo">
+        <div class="logo-icon">N</div>
+        <div class="logo-text">
+            <span class="accent">NEXUS</span> · 招标文件合规检测
+            <br><span class="sub">AI-Powered Tender Document Compliance Checker</span>
+        </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:16px;">
+        <div class="nav-links" style="display:flex; gap:8px;">
+            <a href="/" class="nav-link">首页</a>
+            <a href="/check" class="nav-link active">合规检测</a>
+            <a href="/bid" class="nav-link">投标生成</a>
+        </div>
+        <div class="status-badge disabled" id="llmStatus">
+            <span class="dot"></span>
+            <span id="llmStatusText">检测中...</span>
+        </div>
+    </div>
+</nav>
+
+<!-- 主内容 -->
+<div class="main-container">
+
+    <!-- Hero -->
+    <div class="hero">
+        <h1>招标文件智能合规检测</h1>
+        <p>基于AI大模型 + 规则引擎，对招标文件开展合规性、合理性、错敏词等多维度检测，自动识别违法违规和排斥限制竞争等问题，辅助招标人进行智慧纠偏。</p>
+        <div class="policy-badge">📋 政策依据：发改法规〔2026〕195号 — 招标文件"先体检、再发布"</div>
+    </div>
+
+    <!-- 检测维度 -->
+    <div class="dimensions">
+        <div class="dimension-card">
+            <div class="dim-icon">🚫</div>
+            <div class="dim-title">排斥限制竞争</div>
+            <div class="dim-desc">地域/规模/品牌歧视</div>
+        </div>
+        <div class="dimension-card">
+            <div class="dim-icon">⚖️</div>
+            <div class="dim-title">违法违规条款</div>
+            <div class="dim-desc">违反招投标法条款</div>
+        </div>
+        <div class="dimension-card">
+            <div class="dim-icon">🔍</div>
+            <div class="dim-title">错敏词检测</div>
+            <div class="dim-desc">敏感词/错别字</div>
+        </div>
+        <div class="dimension-card">
+            <div class="dim-icon">📊</div>
+            <div class="dim-title">评标办法合规</div>
+            <div class="dim-desc">评分标准/分值</div>
+        </div>
+        <div class="dimension-card">
+            <div class="dim-icon">⚠️</div>
+            <div class="dim-title">其他风险</div>
+            <div class="dim-desc">工期/保证金/付款</div>
+        </div>
+    </div>
+
+    <!-- 错误提示 -->
+    <div class="error-alert" id="errorAlert"></div>
+
+    <!-- 上传区域 -->
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📄</div>
+        <div class="upload-title">点击或拖拽文件到此处上传</div>
+        <div class="upload-hint">支持招标文件上传，AI自动检测合规风险</div>
+        <div class="upload-formats">
+            <span class="format-tag">.docx</span>
+            <span class="format-tag">.pdf</span>
+            <span class="format-tag">.txt</span>
+        </div>
+        <input type="file" id="fileInput" accept=".docx,.pdf,.txt" style="display:none">
+    </div>
+
+    <!-- 结果区域 -->
+    <div class="results-section" id="resultsSection">
+        <!-- 概览面板 -->
+        <div class="summary-panel">
+            <div class="summary-header">
+                <h3>📊 检测报告</h3>
+                <div class="actions">
+                    <a href="#" class="btn-nexus-outline" id="pdfBtn" target="_blank">⬇ 下载PDF报告</a>
+                    <button class="btn-nexus-outline" onclick="resetPage()">🔄 重新检测</button>
+                </div>
+            </div>
+            <div class="summary-stats" id="summaryStats">
+                <!-- 动态填充 -->
+            </div>
+        </div>
+
+        <!-- 详细结果列表 -->
+        <div id="resultItems">
+            <!-- 动态填充 -->
+        </div>
+    </div>
+</div>
+
+<!-- 加载动画 -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">正在检测中...</div>
+    <div class="loading-subtext" id="loadingSubtext">AI正在分析招标文件内容</div>
+</div>
+
+<!-- 页脚 -->
+<div class="footer">
+    <p>NEXUS · 招标文件合规检测系统 | 基于规则引擎 + AI大语言模型 | 检测结果仅供参考，不构成法律意见</p>
+</div>
+
+<script>
+// ============================================================
+// 全局状态
+// ============================================================
+let currentReportId = null;
+let loadingTimer = null;
+
+const loadingMessages = [
+    '正在解析文档内容...',
+    '规则引擎检测中...',
+    'AI深度合规分析中...',
+    '正在生成检测报告...',
+    '即将完成...'
+];
+
+// ============================================================
+// 初始化：检查LLM状态
+// ============================================================
+async function initStatus() {
+    try {
+        const resp = await fetch('/api/health');
+        const data = await resp.json();
+        const badge = document.getElementById('llmStatus');
+        const text = document.getElementById('llmStatusText');
+        if (data.llm_enabled) {
+            badge.classList.remove('disabled');
+            badge.classList.add('enabled');
+            text.textContent = 'AI深度分析已启用';
+        } else {
+            text.textContent = '仅规则引擎检测';
+        }
+    } catch (e) {
+        document.getElementById('llmStatusText').textContent = '服务运行中';
+    }
+}
+
+// ============================================================
+// 文件上传处理
+// ============================================================
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+
+// 拖拽事件
+uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('dragover');
+});
+uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('dragover');
+});
+uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) {
+        handleFileUpload(e.dataTransfer.files[0]);
+    }
+});
+
+// 文件选择
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        handleFileUpload(e.target.files[0]);
+    }
+});
+
+// ============================================================
+// 上传文件并检测
+// ============================================================
+async function handleFileUpload(file) {
+    // 隐藏错误提示
+    document.getElementById('errorAlert').classList.remove('active');
+    document.getElementById('resultsSection').classList.remove('active');
+
+    // 显示加载动画
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.add('active');
+
+    // 循环显示加载消息
+    let msgIndex = 0;
+    document.getElementById('loadingSubtext').textContent = loadingMessages[0];
+    loadingTimer = setInterval(() => {
+        msgIndex = (msgIndex + 1) % loadingMessages.length;
+        document.getElementById('loadingSubtext').textContent = loadingMessages[msgIndex];
+    }, 2000);
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const resp = await fetch('/api/check', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await resp.json();
+
+        if (!resp.ok || data.error) {
+            throw new Error(data.error || '检测失败，请重试');
+        }
+
+        // 显示结果
+        currentReportId = data.id;
+        displayResults(data);
+
+    } catch (error) {
+        showError(error.message);
+    } finally {
+        overlay.classList.remove('active');
+        clearInterval(loadingTimer);
+    }
+}
+
+// ============================================================
+// 显示检测结果
+// ============================================================
+function displayResults(report) {
+    // 概览
+    const stats = report.summary;
+    document.getElementById('summaryStats').innerHTML = `
+        <div class="stat-card total">
+            <div class="stat-value">${stats.total}</div>
+            <div class="stat-label">总问题数</div>
+        </div>
+        <div class="stat-card high">
+            <div class="stat-value">${stats.high}</div>
+            <div class="stat-label">高风险</div>
+        </div>
+        <div class="stat-card medium">
+            <div class="stat-value">${stats.medium}</div>
+            <div class="stat-label">中风险</div>
+        </div>
+        <div class="stat-card low">
+            <div class="stat-value">${stats.low}</div>
+            <div class="stat-label">低风险</div>
+        </div>
+    `;
+
+    // PDF下载链接
+    const pdfBtn = document.getElementById('pdfBtn');
+    pdfBtn.href = `/api/report/${report.id}?format=pdf`;
+
+    // 详细结果
+    const itemsContainer = document.getElementById('resultItems');
+
+    if (!report.items || report.items.length === 0) {
+        itemsContainer.innerHTML = `
+            <div class="no-results">
+                <div class="icon">✅</div>
+                <h3>未检测到合规问题</h3>
+                <p style="color: var(--text-secondary); margin-top: 8px;">招标文件整体合规性良好</p>
+            </div>
+        `;
+    } else {
+        // 按风险等级排序
+        const levelOrder = { '高': 0, '中': 1, '低': 2 };
+        const sortedItems = [...report.items].sort((a, b) => {
+            return (levelOrder[a.level] || 3) - (levelOrder[b.level] || 3);
+        });
+
+        itemsContainer.innerHTML = sortedItems.map((item, idx) => {
+            const levelClass = item.level === '高' ? 'high' : (item.level === '中' ? 'medium' : 'low');
+            return `
+                <div class="result-item level-${levelClass}">
+                    <div class="result-header">
+                        <span class="level-badge ${levelClass}">${item.level}风险</span>
+                        <span class="category-tag">${item.category}</span>
+                        <span style="color: var(--text-muted); font-size: 12px;">#${idx + 1}</span>
+                    </div>
+                    <div class="result-body">
+                        <div class="result-field">
+                            <span class="field-label">问题描述</span>
+                            <span class="field-value">${escapeHtml(item.description)}</span>
+                        </div>
+                        ${item.original_text ? `
+                        <div class="result-field quote">
+                            <span class="field-label">原文引用</span>
+                            <span class="field-value">"${escapeHtml(item.original_text)}"</span>
+                        </div>` : ''}
+                        ${item.legal_basis ? `
+                        <div class="result-field">
+                            <span class="field-label">法规依据</span>
+                            <span class="field-value" style="color: var(--accent-dim);">${escapeHtml(item.legal_basis)}</span>
+                        </div>` : ''}
+                        ${item.suggestion ? `
+                        <div class="result-field">
+                            <span class="field-label">修改建议</span>
+                            <span class="field-value" style="color: var(--success);">${escapeHtml(item.suggestion)}</span>
+                        </div>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // 显示结果区域
+    document.getElementById('resultsSection').classList.add('active');
+    // 滚动到结果区域
+    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ============================================================
+// 辅助函数
+// ============================================================
+function showError(msg) {
+    const alert = document.getElementById('errorAlert');
+    alert.textContent = '❌ ' + msg;
+    alert.classList.add('active');
+}
+
+function resetPage() {
+    document.getElementById('resultsSection').classList.remove('active');
+    document.getElementById('errorAlert').classList.remove('active');
+    document.getElementById('fileInput').value = '';
+    currentReportId = null;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// ============================================================
+// 启动
+// ============================================================
+initStatus();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: nexus-bid
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: SILICONFLOW_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0

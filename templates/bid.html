@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS · AI投标文件生成</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a1a;
+            --bg-secondary: #12122a;
+            --bg-card: #1a1a3e;
+            --bg-card-hover: #222260;
+            --accent: #00ffff;
+            --accent-dim: #00aaaa;
+            --accent-glow: rgba(0, 255, 255, 0.15);
+            --text-primary: #e0e0ff;
+            --text-secondary: #8888aa;
+            --text-muted: #555577;
+            --border: #2a2a55;
+            --danger: #ff4466;
+            --danger-bg: rgba(255, 68, 102, 0.1);
+            --warning: #ffaa00;
+            --warning-bg: rgba(255, 170, 0, 0.1);
+            --success: #00ff88;
+            --success-bg: rgba(0, 255, 136, 0.1);
+        }
+        * { box-sizing: border-box; }
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            min-height: 100vh;
+            margin: 0; padding: 0;
+        }
+
+        /* 导航 */
+        .navbar-nexus {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .navbar-nexus .logo { display: flex; align-items: center; gap: 12px; }
+        .navbar-nexus .logo-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 18px; color: var(--bg-primary);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+        .navbar-nexus .logo-text { font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+        .navbar-nexus .logo-text .accent { color: var(--accent); }
+        .navbar-nexus .logo-text .sub { color: var(--text-secondary); font-weight: 400; font-size: 14px; }
+        .navbar-nexus .nav-links { display: flex; gap: 16px; }
+        .navbar-nexus .nav-links a {
+            color: var(--text-secondary); text-decoration: none; font-size: 14px;
+            padding: 6px 16px; border-radius: 8px; transition: all 0.3s;
+        }
+        .navbar-nexus .nav-links a:hover { color: var(--accent); background: var(--bg-card); }
+        .navbar-nexus .nav-links a.active { color: var(--accent); background: var(--bg-card); }
+
+        /* 主容器 */
+        .main-container { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+        /* Hero */
+        .hero { text-align: center; margin-bottom: 40px; }
+        .hero h1 {
+            font-size: 36px; font-weight: 800; margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--accent), #66ddff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .hero p { color: var(--text-secondary); font-size: 15px; line-height: 1.8; max-width: 700px; margin: 0 auto; }
+
+        /* 步骤指示器 */
+        .step-indicator {
+            display: flex; justify-content: center; gap: 0; margin-bottom: 40px;
+        }
+        .step-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 20px; font-size: 14px; color: var(--text-muted);
+            border-bottom: 2px solid var(--border); transition: all 0.3s;
+        }
+        .step-item.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .step-item.done { color: var(--success); border-bottom-color: var(--success); }
+        .step-item .step-num {
+            width: 24px; height: 24px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700; border: 2px solid currentColor;
+        }
+        .step-item.active .step-num { background: var(--accent); color: var(--bg-primary); }
+        .step-item.done .step-num { background: var(--success); color: var(--bg-primary); }
+
+        /* 卡片 */
+        .card-nexus {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 24px; margin-bottom: 24px;
+        }
+        .card-nexus h3 { font-size: 18px; margin: 0 0 16px; color: var(--text-primary); }
+
+        /* 上传区域 */
+        .upload-zone {
+            background: var(--bg-card); border: 2px dashed var(--border);
+            border-radius: 16px; padding: 48px 32px; text-align: center;
+            cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--accent); background: var(--bg-card-hover);
+            box-shadow: 0 0 40px var(--accent-glow);
+        }
+        .upload-zone .upload-icon { font-size: 48px; color: var(--accent); margin-bottom: 16px; opacity: 0.8; }
+        .upload-zone .upload-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .upload-zone .upload-hint { color: var(--text-secondary); font-size: 13px; }
+        .upload-zone .upload-formats { margin-top: 12px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        .upload-zone .format-tag {
+            padding: 3px 10px; background: var(--bg-secondary);
+            border: 1px solid var(--border); border-radius: 4px; font-size: 12px; color: var(--accent-dim);
+        }
+
+        /* 按钮 */
+        .btn-nexus {
+            background: var(--accent); color: var(--bg-primary); border: none;
+            padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px;
+            cursor: pointer; transition: all 0.3s; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-nexus:hover { background: var(--accent-dim); box-shadow: 0 0 20px var(--accent-glow); color: var(--bg-primary); }
+        .btn-nexus:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-nexus-outline {
+            background: transparent; color: var(--text-secondary); border: 1px solid var(--border);
+            padding: 10px 24px; border-radius: 8px; font-weight: 500; font-size: 14px;
+            cursor: pointer; transition: all 0.3s; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-nexus-outline:hover { border-color: var(--accent-dim); color: var(--accent); }
+
+        /* 表单 */
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%; background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 8px; padding: 10px 14px; color: var(--text-primary); font-size: 14px;
+            font-family: inherit; transition: all 0.3s;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        .form-group input::placeholder, .form-group textarea::placeholder { color: var(--text-muted); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+        /* 解析结果展示 */
+        .req-section { margin-bottom: 20px; }
+        .req-section h4 { font-size: 15px; color: var(--accent); margin-bottom: 10px; }
+        .req-list { list-style: none; padding: 0; margin: 0; }
+        .req-list li {
+            padding: 8px 12px; background: var(--bg-secondary); border-radius: 6px;
+            margin-bottom: 6px; font-size: 14px; border-left: 3px solid var(--accent-dim);
+        }
+        .req-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .req-tag {
+            padding: 4px 12px; background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 4px; font-size: 13px; color: var(--text-secondary);
+        }
+
+        /* 材料清单 */
+        .material-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; background: var(--bg-secondary); border-radius: 8px;
+            margin-bottom: 8px; border: 1px solid var(--border); transition: all 0.3s;
+        }
+        .material-item.provided { border-color: var(--success); }
+        .material-item.missing { border-color: var(--danger); }
+        .material-item .mat-info { flex: 1; }
+        .material-item .mat-name { font-size: 14px; font-weight: 600; }
+        .material-item .mat-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .material-item .mat-badge {
+            padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;
+        }
+        .mat-badge.must { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+        .mat-badge.optional { background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); }
+        .mat-badge.provided { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+        .mat-badge.missing { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+        .material-item .mat-files { font-size: 12px; color: var(--accent-dim); margin-top: 4px; }
+
+        /* 材料上传区域 */
+        .material-upload {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 10px; padding: 16px; margin-bottom: 16px;
+        }
+        .material-upload-row { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+        .material-upload select {
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 8px; padding: 8px 12px; color: var(--text-primary); font-size: 14px;
+        }
+
+        /* 已上传材料列表 */
+        .uploaded-file {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 12px; background: var(--bg-secondary); border-radius: 6px;
+            margin-bottom: 6px; font-size: 13px;
+        }
+        .uploaded-file .file-info { display: flex; align-items: center; gap: 8px; }
+        .uploaded-file .file-icon { font-size: 16px; }
+        .uploaded-file .file-size { color: var(--text-muted); font-size: 12px; }
+        .uploaded-file .btn-remove {
+            color: var(--danger); cursor: pointer; font-size: 14px; padding: 2px 8px;
+            border: none; background: none;
+        }
+
+        /* 步骤区域 */
+        .step-section { display: none; }
+        .step-section.active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 加载动画 */
+        .loading-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 26, 0.92); z-index: 9999;
+            justify-content: center; align-items: center; flex-direction: column;
+        }
+        .loading-overlay.active { display: flex; }
+        .loading-spinner {
+            width: 60px; height: 60px; border: 4px solid var(--border);
+            border-top-color: var(--accent); border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 24px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: var(--accent); font-size: 16px; font-weight: 600; }
+        .loading-subtext { color: var(--text-secondary); font-size: 13px; margin-top: 8px; }
+
+        /* 错误提示 */
+        .error-alert {
+            display: none; background: var(--danger-bg); border: 1px solid var(--danger);
+            border-radius: 10px; padding: 16px 20px; margin-bottom: 24px; color: var(--danger); font-size: 14px;
+        }
+        .error-alert.active { display: block; }
+
+        /* 成功提示 */
+        .success-alert {
+            display: none; background: var(--success-bg); border: 1px solid var(--success);
+            border-radius: 10px; padding: 16px 20px; margin-bottom: 24px; color: var(--success); font-size: 14px;
+        }
+        .success-alert.active { display: block; }
+
+        /* 图片预览 */
+        .image-preview {
+            max-width: 120px; max-height: 120px; border-radius: 6px;
+            border: 1px solid var(--border); cursor: pointer; margin: 4px;
+        }
+
+        /* 页脚 */
+        .footer {
+            text-align: center; padding: 32px 0; color: var(--text-muted); font-size: 12px;
+            border-top: 1px solid var(--border); margin-top: 60px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .form-row, .form-row-3 { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 26px; }
+            .step-indicator { flex-wrap: wrap; }
+            .main-container { padding: 24px 16px 60px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 导航 -->
+<nav class="navbar-nexus">
+    <div class="logo">
+        <div class="logo-icon">N</div>
+        <div class="logo-text">
+            <span class="accent">NEXUS</span> · AI投标文件生成
+            <br><span class="sub">AI-Powered Bid Document Generator</span>
+        </div>
+    </div>
+    <div class="nav-links">
+        <a href="/">首页</a>
+        <a href="/check">合规检测</a>
+        <a href="/bid" class="active">投标生成</a>
+    </div>
+</nav>
+
+<!-- 主内容 -->
+<div class="main-container">
+    <!-- Hero -->
+    <div class="hero">
+        <h1>AI智能投标文件生成</h1>
+        <p>上传招标文件，AI自动解析需求并生成专业投标文件初稿。支持佐证材料管理，自动匹配材料清单，生成包含附件清单的完整标书。</p>
+    </div>
+
+    <!-- 步骤指示器 -->
+    <div class="step-indicator">
+        <div class="step-item active" id="step1Indicator">
+            <span class="step-num">1</span>
+            <span>上传招标文件</span>
+        </div>
+        <div class="step-item" id="step2Indicator">
+            <span class="step-num">2</span>
+            <span>填写企业信息</span>
+        </div>
+        <div class="step-item" id="step3Indicator">
+            <span class="step-num">3</span>
+            <span>管理佐证材料</span>
+        </div>
+        <div class="step-item" id="step4Indicator">
+            <span class="step-num">4</span>
+            <span>生成投标文件</span>
+        </div>
+    </div>
+
+    <!-- 错误/成功提示 -->
+    <div class="error-alert" id="errorAlert"></div>
+    <div class="success-alert" id="successAlert"></div>
+
+    <!-- ====== 步骤1: 上传招标文件 ====== -->
+    <div class="step-section active" id="step1">
+        <div class="upload-zone" id="tenderUploadZone" onclick="document.getElementById('tenderFileInput').click()">
+            <div class="upload-icon">📄</div>
+            <div class="upload-title">点击或拖拽招标文件到此处上传</div>
+            <div class="upload-hint">AI将自动解析招标要求、资质要求、评分标准和佐证材料清单</div>
+            <div class="upload-formats">
+                <span class="format-tag">.docx</span>
+                <span class="format-tag">.pdf</span>
+                <span class="format-tag">.txt</span>
+            </div>
+            <input type="file" id="tenderFileInput" accept=".docx,.pdf,.txt" style="display:none">
+        </div>
+    </div>
+
+    <!-- ====== 步骤2: 解析结果 + 企业信息表单 ====== -->
+    <div class="step-section" id="step2">
+        <!-- 解析结果 -->
+        <div class="card-nexus">
+            <h3>📋 招标文件解析结果</h3>
+            <div id="parseResult"></div>
+        </div>
+
+        <!-- 企业信息表单 -->
+        <div class="card-nexus">
+            <h3>🏢 投标人企业信息</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>企业名称 *</label>
+                    <input type="text" id="companyName" placeholder="如：XX科技有限公司">
+                </div>
+                <div class="form-group">
+                    <label>统一社会信用代码 *</label>
+                    <input type="text" id="creditCode" placeholder="18位社会信用代码">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>企业地址</label>
+                    <input type="text" id="address" placeholder="企业注册地址">
+                </div>
+                <div class="form-group">
+                    <label>联系电话</label>
+                    <input type="text" id="phone" placeholder="联系电话">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>联系人</label>
+                    <input type="text" id="contactPerson" placeholder="项目负责人或联系人">
+                </div>
+                <div class="form-group">
+                    <label>投标报价（元）</label>
+                    <input type="text" id="bidPrice" placeholder="如：980000（可后续填写）">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>工期/交货期</label>
+                <input type="text" id="deliveryPeriod" placeholder="如：合同签订后60个日历天">
+            </div>
+            <div class="form-group">
+                <label>资质证书（每行一个）</label>
+                <textarea id="qualifications" rows="3" placeholder="如：ISO9001质量管理体系认证&#10;安全生产许可证&#10;计算机信息系统集成资质"></textarea>
+            </div>
+            <div class="form-group">
+                <label>项目团队人员配置（每行一个，格式：姓名-职务-资质）</label>
+                <textarea id="teamMembers" rows="4" placeholder="如：张三-项目经理-PMP认证&#10;李四-技术负责人-高级工程师&#10;王五-质量负责人-注册质量工程师"></textarea>
+            </div>
+            <div class="form-group">
+                <label>同类项目业绩（每行一个，至少3个）</label>
+                <textarea id="performances" rows="5" placeholder="如：XX市政务系统建设项目（2024年，合同金额200万元）&#10;XX区智慧城市平台（2023年，合同金额350万元）"></textarea>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <button class="btn-nexus-outline" onclick="goToStep(1)">← 返回上传</button>
+            <button class="btn-nexus" onclick="goToStep(3)">下一步：管理材料 →</button>
+        </div>
+    </div>
+
+    <!-- ====== 步骤3: 佐证材料管理 ====== -->
+    <div class="step-section" id="step3">
+        <!-- 材料清单 -->
+        <div class="card-nexus">
+            <h3>📎 佐证材料清单</h3>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">AI已根据招标文件自动列出所需的佐证材料，请上传已有材料，缺失材料将在投标文件中标注。</p>
+            <div id="materialList"></div>
+        </div>
+
+        <!-- 材料上传 -->
+        <div class="card-nexus">
+            <h3>📤 上传佐证材料</h3>
+            <div class="material-upload">
+                <div class="material-upload-row">
+                    <select id="materialCategory" style="min-width: 200px;">
+                        <option value="">选择材料类型...</option>
+                    </select>
+                    <button class="btn-nexus-outline" onclick="document.getElementById('materialFileInput').click()">选择文件</button>
+                    <input type="file" id="materialFileInput" style="display:none" multiple>
+                </div>
+                <p style="color: var(--text-muted); font-size: 12px; margin: 0;">
+                    支持格式：文档(.docx/.pdf/.xls/.xlsx/.pptx) 图片(.jpg/.png/.bmp/.webp) 视频(.mp4/.avi/.mov) 压缩包(.zip/.rar)
+                    <br>大小限制：文档20MB / 图片10MB / 视频100MB
+                </p>
+            </div>
+
+            <!-- 已上传文件列表 -->
+            <div id="uploadedFiles"></div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <button class="btn-nexus-outline" onclick="goToStep(2)">← 返回企业信息</button>
+            <button class="btn-nexus" onclick="goToStep(4)">下一步：生成标书 →</button>
+        </div>
+    </div>
+
+    <!-- ====== 步骤4: 生成投标文件 ====== -->
+    <div class="step-section" id="step4">
+        <div class="card-nexus">
+            <h3>🎯 生成投标文件</h3>
+            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.8;">
+                点击下方按钮，AI将根据招标要求和企业信息生成完整的投标文件初稿，包含：
+            </p>
+            <ul style="color: var(--text-secondary); font-size: 14px; line-height: 2;">
+                <li>封面（项目名称 + 投标人 + 日期）</li>
+                <li>投标函（正式投标函）</li>
+                <li>投标一览表（报价、工期、质量保证）</li>
+                <li>资格证明文件（资质证书清单）</li>
+                <li>技术方案（逐条响应招标技术要求）</li>
+                <li>商务方案（报价明细、付款方式、售后服务）</li>
+                <li>项目团队（人员配置、资质证书）</li>
+                <li>业绩证明（同类项目业绩列表）</li>
+                <li>承诺函（廉政承诺、保密承诺）</li>
+                <li>附件清单（佐证材料引用）</li>
+            </ul>
+            <div style="margin-top: 20px;">
+                <button class="btn-nexus" id="generateBtn" onclick="generateBid()" style="font-size: 16px; padding: 12px 32px;">
+                    🚀 生成投标文件
+                </button>
+            </div>
+        </div>
+
+        <!-- 生成结果 -->
+        <div id="generateResult" style="display:none;">
+            <div class="card-nexus" id="resultCard">
+                <!-- 动态填充 -->
+            </div>
+        </div>
+
+        <div style="margin-top: 24px;">
+            <button class="btn-nexus-outline" onclick="goToStep(3)">← 返回材料管理</button>
+        </div>
+    </div>
+</div>
+
+<!-- 加载动画 -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">正在处理中...</div>
+    <div class="loading-subtext" id="loadingSubtext">请稍候</div>
+</div>
+
+<!-- 页脚 -->
+<div class="footer">
+    <p>NEXUS · AI投标文件生成系统 | 基于大语言模型自动生成 | 生成的投标文件为初稿，请人工审核后使用</p>
+</div>
+
+<script>
+// ============================================================
+// 全局状态
+// ============================================================
+let sessionId = null;          // 当前会话ID
+let tenderRequirements = null;  // 解析出的招标需求
+let uploadedMaterials = [];     // 已上传的佐证材料 [{filename, category, file_type, size, path}]
+let generatedFilename = null;   // 生成的投标文件名
+let loadingTimer = null;
+
+const FILE_ICONS = {
+    document: '📄', image: '🖼️', video: '🎬', archive: '📦'
+};
+const FILE_TYPE_LABELS = {
+    document: '文档', image: '图片', video: '视频', archive: '压缩包'
+};
+
+// ============================================================
+// 步骤导航
+// ============================================================
+function goToStep(stepNum) {
+    // 隐藏所有步骤
+    document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
+    // 显示目标步骤
+    document.getElementById('step' + stepNum).classList.add('active');
+    // 更新步骤指示器
+    for (let i = 1; i <= 4; i++) {
+        const indicator = document.getElementById('step' + i + 'Indicator');
+        indicator.classList.remove('active', 'done');
+        if (i < stepNum) indicator.classList.add('done');
+        else if (i === stepNum) indicator.classList.add('active');
+    }
+    // 滚动到顶部
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // 进入步骤3时刷新材料列表
+    if (stepNum === 3) {
+        renderMaterialList();
+        renderUploadedFiles();
+    }
+}
+
+// ============================================================
+// 步骤1: 上传招标文件
+// ============================================================
+const tenderUploadZone = document.getElementById('tenderUploadZone');
+const tenderFileInput = document.getElementById('tenderFileInput');
+
+tenderUploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    tenderUploadZone.classList.add('dragover');
+});
+tenderUploadZone.addEventListener('dragleave', () => {
+    tenderUploadZone.classList.remove('dragover');
+});
+tenderUploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    tenderUploadZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) {
+        uploadTenderFile(e.dataTransfer.files[0]);
+    }
+});
+tenderFileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        uploadTenderFile(e.target.files[0]);
+    }
+});
+
+async function uploadTenderFile(file) {
+    hideAlerts();
+    showLoading('正在解析招标文件...', 'AI正在提取需求信息');
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const resp = await fetch('/api/parse-tender', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await resp.json();
+
+        if (!resp.ok || data.error) {
+            throw new Error(data.error || '解析失败，请重试');
+        }
+
+        // 保存解析结果
+        sessionId = data.session_id;
+        tenderRequirements = data.requirements;
+
+        // 渲染解析结果
+        renderParseResult(data.requirements);
+
+        // 填充材料类型下拉框
+        populateMaterialCategory(data.requirements.required_materials || []);
+
+        // 进入步骤2
+        hideLoading();
+        goToStep(2);
+
+    } catch (error) {
+        hideLoading();
+        showError(error.message);
+    }
+}
+
+// ============================================================
+// 渲染解析结果
+// ============================================================
+function renderParseResult(req) {
+    const html = `
+        <div class="req-section">
+            <h4>📌 项目信息</h4>
+            <div class="req-tags">
+                <span class="req-tag">项目名称：${esc(req.project_name || '未识别')}</span>
+                <span class="req-tag">预算：${esc(req.project_budget || '未识别')}</span>
+                <span class="req-tag">截止日期：${esc(req.deadline || '未识别')}</span>
+            </div>
+        </div>
+        ${req.qualifications && req.qualifications.length ? `
+        <div class="req-section">
+            <h4>✅ 资质要求</h4>
+            <ul class="req-list">
+                ${req.qualifications.map(q => `<li>${esc(q)}</li>`).join('')}
+            </ul>
+        </div>` : ''}
+        ${req.technical_requirements && req.technical_requirements.length ? `
+        <div class="req-section">
+            <h4>🔧 技术要求</h4>
+            <ul class="req-list">
+                ${req.technical_requirements.map((t, i) => `<li>${i+1}. ${esc(t)}</li>`).join('')}
+            </ul>
+        </div>` : ''}
+        ${req.commercial_requirements && req.commercial_requirements.length ? `
+        <div class="req-section">
+            <h4>💰 商务要求</h4>
+            <ul class="req-list">
+                ${req.commercial_requirements.map(c => `<li>${esc(c)}</li>`).join('')}
+            </ul>
+        </div>` : ''}
+        ${Object.keys(req.evaluation_criteria || {}).length ? `
+        <div class="req-section">
+            <h4>📊 评分标准</h4>
+            <div class="req-tags">
+                ${Object.entries(req.evaluation_criteria).map(([k, v]) => `<span class="req-tag">${esc(k)}：${esc(String(v))}分</span>`).join('')}
+            </div>
+        </div>` : ''}
+        ${req.key_dates && Object.keys(req.key_dates).length ? `
+        <div class="req-section">
+            <h4>📅 关键时间节点</h4>
+            <div class="req-tags">
+                ${Object.entries(req.key_dates).map(([k, v]) => `<span class="req-tag">${esc(k)}：${esc(v)}</span>`).join('')}
+            </div>
+        </div>` : ''}
+        ${req._llm_disabled ? `
+        <div style="background: var(--warning-bg); border: 1px solid var(--warning); border-radius: 8px; padding: 12px; margin-top: 16px; color: var(--warning); font-size: 13px;">
+            ⚠️ AI解析未启用（未配置API Key），仅显示基础解析结果。请手动检查并补充信息后继续。
+        </div>` : ''}
+    `;
+    document.getElementById('parseResult').innerHTML = html;
+}
+
+// ============================================================
+// 步骤3: 佐证材料管理
+// ============================================================
+function populateMaterialCategory(materials) {
+    const select = document.getElementById('materialCategory');
+    select.innerHTML = '<option value="">选择材料类型...</option>';
+    materials.forEach(mat => {
+        const option = document.createElement('option');
+        option.value = mat.name;
+        option.textContent = `${mat.name}（${mat.type === 'must' ? '必须' : '可选'}）`;
+        select.appendChild(option);
+    });
+    // 加上标准分类
+    const standardCats = ['营业执照', '法定代表人身份证', '授权委托书', 'ISO9001认证', '业绩合同', '财务报表', '社保缴纳证明', '项目团队资质证书', '项目案例视频', '其他材料'];
+    standardCats.forEach(cat => {
+        if (!materials.find(m => m.name === cat)) {
+            const option = document.createElement('option');
+            option.value = cat;
+            option.textContent = cat + '（补充）';
+            select.appendChild(option);
+        }
+    });
+}
+
+function renderMaterialList() {
+    if (!tenderRequirements) return;
+    const materials = tenderRequirements.required_materials || [];
+    const container = document.getElementById('materialList');
+
+    if (!materials.length) {
+        container.innerHTML = '<p style="color: var(--text-muted); font-size: 14px;">未识别到材料要求</p>';
+        return;
+    }
+
+    container.innerHTML = materials.map(mat => {
+        // 检查是否已上传
+        const matched = uploadedMaterials.filter(f =>
+            f.material_name === mat.name || mat.name.includes(f.filename) || f.filename.includes(mat.name.split('(')[0])
+        );
+        const isProvided = matched.length > 0;
+        const filesInfo = matched.map(f => `${FILE_ICONS[f.file_type] || '📄'} ${f.filename} (${formatSize(f.size)})`).join('<br>');
+
+        return `
+            <div class="material-item ${isProvided ? 'provided' : 'missing'}">
+                <div class="mat-info">
+                    <div class="mat-name">${esc(mat.name)}</div>
+                    <div class="mat-desc">${esc(mat.desc || '')}</div>
+                    ${filesInfo ? `<div class="mat-files">${filesInfo}</div>` : ''}
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <span class="mat-badge ${mat.type === 'must' ? 'must' : 'optional'}">${mat.type === 'must' ? '必须' : '可选'}</span>
+                    <span class="mat-badge ${isProvided ? 'provided' : 'missing'}">${isProvided ? '✓ 已提供' : '✗ 缺失'}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// 文件上传
+document.getElementById('materialFileInput').addEventListener('change', async (e) => {
+    const files = e.target.files;
+    const category = document.getElementById('materialCategory').value;
+    if (!category) {
+        showError('请先选择材料类型');
+        e.target.value = '';
+        return;
+    }
+    if (files.length === 0) return;
+
+    for (const file of files) {
+        await uploadMaterialFile(file, category);
+    }
+    e.target.value = '';
+    // 刷新材料列表
+    renderMaterialList();
+    renderUploadedFiles();
+    showSuccess(`已上传 ${files.length} 个文件`);
+    setTimeout(() => hideAlerts(), 3000);
+});
+
+async function uploadMaterialFile(file, materialName) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('material_name', materialName);
+    formData.append('session_id', sessionId || 'default');
+
+    try {
+        const resp = await fetch('/api/upload-material', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await resp.json();
+        if (!resp.ok || data.error) {
+            throw new Error(data.error || '上传失败');
+        }
+        uploadedMaterials.push({
+            filename: data.filename,
+            material_name: materialName,
+            category: data.category,
+            file_type: data.file_type,
+            size: data.size,
+            path: data.path,
+            preview_url: data.preview_url
+        });
+    } catch (error) {
+        showError(`上传 ${file.name} 失败: ${error.message}`);
+    }
+}
+
+function renderUploadedFiles() {
+    const container = document.getElementById('uploadedFiles');
+    if (!uploadedMaterials.length) {
+        container.innerHTML = '<p style="color: var(--text-muted); font-size: 13px;">尚未上传任何材料</p>';
+        return;
+    }
+
+    container.innerHTML = uploadedMaterials.map((f, idx) => {
+        const icon = FILE_ICONS[f.file_type] || '📄';
+        const typeLabel = FILE_TYPE_LABELS[f.file_type] || '文件';
+        let previewHtml = '';
+        if (f.file_type === 'image' && f.preview_url) {
+            previewHtml = `<img src="${f.preview_url}" class="image-preview" onclick="window.open('${f.preview_url}', '_blank')">`;
+        }
+        return `
+            <div class="uploaded-file">
+                <div class="file-info">
+                    <span class="file-icon">${icon}</span>
+                    <span>${esc(f.filename)}</span>
+                    <span class="file-size">[${typeLabel} ${formatSize(f.size)}] → ${esc(f.material_name)}</span>
+                    ${previewHtml}
+                </div>
+                <button class="btn-remove" onclick="removeMaterial(${idx})">✕</button>
+            </div>
+        `;
+    }).join('');
+}
+
+function removeMaterial(idx) {
+    uploadedMaterials.splice(idx, 1);
+    renderMaterialList();
+    renderUploadedFiles();
+}
+
+// ============================================================
+// 步骤4: 生成投标文件
+// ============================================================
+async function generateBid() {
+    hideAlerts();
+
+    // 收集企业信息
+    const companyInfo = collectCompanyInfo();
+    if (!companyInfo.company_name) {
+        showError('请填写企业名称');
+        goToStep(2);
+        return;
+    }
+
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.textContent = '生成中...';
+
+    showLoading('正在生成投标文件...', 'AI正在撰写技术方案和商务方案');
+
+    try {
+        const resp = await fetch('/api/generate-bid', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                session_id: sessionId,
+                company_info: companyInfo,
+                uploaded_materials: uploadedMaterials
+            })
+        });
+
+        const data = await resp.json();
+        if (!resp.ok || data.error) {
+            throw new Error(data.error || '生成失败');
+        }
+
+        generatedFilename = data.filename;
+        hideLoading();
+        showGenerateResult(data);
+
+    } catch (error) {
+        hideLoading();
+        showError(error.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 生成投标文件';
+    }
+}
+
+function collectCompanyInfo() {
+    return {
+        company_name: document.getElementById('companyName').value.trim(),
+        credit_code: document.getElementById('creditCode').value.trim(),
+        address: document.getElementById('address').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        contact_person: document.getElementById('contactPerson').value.trim(),
+        bid_price: document.getElementById('bidPrice').value.trim(),
+        delivery_period: document.getElementById('deliveryPeriod').value.trim(),
+        qualifications: textareaToLines('qualifications'),
+        team_members: textareaToLines('teamMembers'),
+        performances: textareaToLines('performances'),
+    };
+}
+
+function showGenerateResult(data) {
+    const missing = data.missing_materials || [];
+    const missingMust = missing.filter(m => m.type === 'must');
+    const missingOptional = missing.filter(m => m.type === 'optional');
+
+    let missingHtml = '';
+    if (missing.length > 0) {
+        missingHtml = `
+            <div style="background: ${missingMust.length ? 'var(--danger-bg)' : 'var(--warning-bg)'}; border: 1px solid ${missingMust.length ? 'var(--danger)' : 'var(--warning)'}; border-radius: 10px; padding: 16px; margin-top: 20px;">
+                <h4 style="color: ${missingMust.length ? 'var(--danger)' : 'var(--warning)'}; font-size: 15px; margin-bottom: 12px;">
+                    ${missingMust.length ? '⚠️' : 'ℹ️'} 材料缺失提醒
+                </h4>
+                ${missingMust.length ? `
+                    <p style="color: var(--danger); font-size: 13px; margin-bottom: 8px;">以下必须提供的材料尚未上传，请尽快补充：</p>
+                    <ul style="color: var(--danger); font-size: 13px; padding-left: 20px;">
+                        ${missingMust.map(m => `<li>${esc(m.name)} — ${esc(m.desc || '')}</li>`).join('')}
+                    </ul>
+                ` : ''}
+                ${missingOptional.length ? `
+                    <p style="color: var(--warning); font-size: 13px; margin-bottom: 8px; margin-top: 8px;">以下可选材料建议补充以提高中标概率：</p>
+                    <ul style="color: var(--warning); font-size: 13px; padding-left: 20px;">
+                        ${missingOptional.map(m => `<li>${esc(m.name)}</li>`).join('')}
+                    </ul>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    const html = `
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 48px; margin-bottom: 12px;">✅</div>
+            <h3 style="color: var(--success); font-size: 22px;">投标文件生成成功！</h3>
+            <p style="color: var(--text-secondary); font-size: 14px; margin-top: 8px;">文件名：${esc(data.filename)}</p>
+        </div>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="/api/download-bid/${encodeURIComponent(data.filename)}" class="btn-nexus" style="font-size: 16px; padding: 12px 32px;">
+                ⬇ 下载投标文件 (.docx)
+            </a>
+        </div>
+        <div style="background: var(--bg-secondary); border-radius: 10px; padding: 16px; margin-top: 16px;">
+            <h4 style="font-size: 14px; color: var(--accent); margin-bottom: 8px;">📊 生成摘要</h4>
+            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+                <div>技术方案响应：${data.summary?.technical_count || 0} 条</div>
+                <div>佐证材料：已提供 ${data.summary?.provided_count || 0} 项，缺失 ${missing.length} 项</div>
+                <div>投标文件包含 ${data.summary?.sections || 10} 个章节</div>
+                ${data.summary?.llm_disabled ? '<div style="color: var(--warning);">⚠️ AI未启用，技术方案为模板响应，建议配置API Key后重新生成</div>' : ''}
+            </div>
+        </div>
+        ${missingHtml}
+        <div style="text-align: center; margin-top: 24px;">
+            <button class="btn-nexus-outline" onclick="resetAll()">🔄 重新开始</button>
+        </div>
+    `;
+    document.getElementById('resultCard').innerHTML = html;
+    document.getElementById('generateResult').style.display = 'block';
+    document.getElementById('generateResult').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ============================================================
+// 辅助函数
+// ============================================================
+function showLoading(text, subtext) {
+    document.getElementById('loadingText').textContent = text;
+    document.getElementById('loadingSubtext').textContent = subtext;
+    document.getElementById('loadingOverlay').classList.add('active');
+
+    const messages = [subtext, 'AI正在分析中...', '正在处理文档内容...', '即将完成...'];
+    let idx = 0;
+    loadingTimer = setInterval(() => {
+        idx = (idx + 1) % messages.length;
+        document.getElementById('loadingSubtext').textContent = messages[idx];
+    }, 2500);
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').classList.remove('active');
+    clearInterval(loadingTimer);
+}
+
+function showError(msg) {
+    const alert = document.getElementById('errorAlert');
+    alert.textContent = '❌ ' + msg;
+    alert.classList.add('active');
+    document.getElementById('successAlert').classList.remove('active');
+}
+
+function showSuccess(msg) {
+    const alert = document.getElementById('successAlert');
+    alert.textContent = '✅ ' + msg;
+    alert.classList.add('active');
+    document.getElementById('errorAlert').classList.remove('active');
+}
+
+function hideAlerts() {
+    document.getElementById('errorAlert').classList.remove('active');
+    document.getElementById('successAlert').classList.remove('active');
+}
+
+function resetAll() {
+    sessionId = null;
+    tenderRequirements = null;
+    uploadedMaterials = [];
+    generatedFilename = null;
+    document.getElementById('tenderFileInput').value = '';
+    document.getElementById('generateResult').style.display = 'none';
+    hideAlerts();
+    goToStep(1);
+}
+
+function textareaToLines(id) {
+    const val = document.getElementById(id).value.trim();
+    if (!val) return [];
+    return val.split('\n').map(s => s.trim()).filter(s => s);
+}
+
+function formatSize(bytes) {
+    if (bytes < 1024) return bytes + 'B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + 'KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
+}
+
+function esc(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+</script>
+
+</body>
+</html>
